@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -103,6 +104,7 @@ namespace AbrViewer.ViewModels
             OpenFolderCommand = new RelayCommand(OpenFolder);
             ExitCommand = new RelayCommand(Exit);
             SaveImageCommand = new RelayCommand<BitmapSource>(SaveImage);
+            SaveAllImagesCommand = new RelayCommand(SaveAllImages);
             AboutCommand = new RelayCommand(About);
             PreviewCommand = new RelayCommand<BitmapSource>(Preview);
             DeleteFileCommand = new RelayCommand<FileInfo>(DeleteFile);
@@ -164,6 +166,40 @@ namespace AbrViewer.ViewModels
                 encoder.Frames.Add(BitmapFrame.Create(bmp));
                 using (var fs = File.OpenWrite(imageFilePath))
                     encoder.Save(fs);
+            }
+        }
+
+        private void SaveAllImages() {
+            if (_images.Count == 0) return;
+
+            var selectedFile = BrushFiles.CurrentItem as FileInfo;
+            string defaultName = selectedFile != null ? Path.GetFileNameWithoutExtension(selectedFile.Name) : "Brushes";
+
+            Microsoft.Win32.SaveFileDialog sfd = new Microsoft.Win32.SaveFileDialog() {
+                Title = "Save all images as ZIP",
+                Filter = "ZIP file|*.zip",
+                DefaultExt = "zip",
+                FileName = defaultName + ".zip"
+            };
+
+            if (sfd.ShowDialog() == true) {
+                var zipFilePath = sfd.FileName;
+                try {
+                    using (var fs = new FileStream(zipFilePath, FileMode.Create))
+                    using (var archive = new ZipArchive(fs, ZipArchiveMode.Create)) {
+                        for (int i = 0; i < _images.Count; i++) {
+                            var entry = archive.CreateEntry($"{defaultName}_{i + 1:D3}.png");
+                            using (var entryStream = entry.Open()) {
+                                var encoder = new PngBitmapEncoder();
+                                encoder.Frames.Add(BitmapFrame.Create(_images[i]));
+                                encoder.Save(entryStream);
+                            }
+                        }
+                    }
+                    _dialogService.ShowDialog("Success", $"Successfully saved {_images.Count} images to {Path.GetFileName(zipFilePath)}", MessageBoxImage.Information);
+                } catch (Exception ex) {
+                    _dialogService.ShowDialog("Error", $"Error saving zip file:\n{ex.Message}", MessageBoxImage.Error);
+                }
             }
         }
 
@@ -296,6 +332,7 @@ namespace AbrViewer.ViewModels
         public ICommand OpenFolderCommand { get; }
         public ICommand ExitCommand { get; }
         public ICommand SaveImageCommand { get; }
+        public ICommand SaveAllImagesCommand { get; }
         public ICommand PreviewCommand { get; }
         public ICommand AboutCommand { get; }
         public ICommand DeleteFileCommand { get; }

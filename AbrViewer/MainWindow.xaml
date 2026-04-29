@@ -1,4 +1,4 @@
-﻿<Window x:Class="AbrViewer.MainWindow"
+<Window x:Class="AbrViewer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
@@ -59,6 +59,7 @@
                     <TextBlock VerticalAlignment="Center" Text="Thumbnail size:"/>
                     <Slider Margin="6,0,0,0" VerticalAlignment="Center" x:Name="sizeSlider" Value="{Binding Config.ThumbnailSize}" Minimum="60" Maximum="300" Width="200"  />
                     <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Text="{Binding ElementName=sizeSlider, Path=Value, StringFormat='{}{0:N0}px'}" />
+                    <Button Margin="20,0,0,0" Padding="10,2" Content="Save all images as .zip" Command="{Binding SaveAllImagesCommand}" />
                 </StackPanel>
                 <ListBox Margin="0,2,0,0" x:Name="imageList" ItemsSource="{Binding BrushImages}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemsPanel>
